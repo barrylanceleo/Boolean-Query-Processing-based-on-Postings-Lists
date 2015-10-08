@@ -37,7 +37,7 @@ public class Dictionary {
         int i = 1;
         for (Term term : terms) {
             System.out.println(i + ". Term: " + term.termString);
-            System.out.println("Count: " + term.postingCount);
+            System.out.println("Number of postings: " + term.postingCount);
             System.out.println("Posting List : ");
             int j = 1;
             for (Posting p : term.postingList) {
@@ -66,7 +66,7 @@ public class Dictionary {
             //ignore the element if topkterms is filled
             // and the posting count is smaller than all terms in topKterms
             if (topKTerms.terms.size() >= k && topKTerms.terms.get(k - 1).postingCount >= terms.get(i).postingCount) {
-                System.out.println("Ignoring terms " + i);
+                //System.out.println("Ignoring term " + i);
                 break;
             }
             for (int j = 0; j < topKTerms.terms.size(); j++) {
@@ -82,5 +82,12 @@ public class Dictionary {
         topKTerms.termsCount = topKTerms.terms.size();
         return topKTerms;
     }
-    
+
+    Term getPostingList(String inputString) {
+        for (Term term : terms) {
+            if (term.termString.equals(inputString))
+                return term;
+        }
+        return null;
+    }
 }
