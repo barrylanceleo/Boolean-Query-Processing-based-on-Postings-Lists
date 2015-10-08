@@ -8,7 +8,7 @@ import java.util.LinkedList;
 
 public class IndexBuilder {
 
-    Dictionary BuildIndex(String fileName) {
+    Dictionary BuildIndex(String fileName, Dictionary.SortBy sortBy) {
 
         // This will reference one line at a time
         String line;
@@ -27,6 +27,8 @@ public class IndexBuilder {
             Dictionary dictionary = new Dictionary();
             dictionary.termsCount = 0;
             dictionary.terms = new LinkedList<>();
+            //the dictionary will be sorted by sortBy value
+            dictionary.sortedBy = sortBy;
 
             //Read the Posting File and process it
             while ((line = bufferedReader.readLine()) != null) {
@@ -78,8 +80,33 @@ public class IndexBuilder {
                         if (dataInPosting.length == 2) {
                             Posting posting = new Posting();
                             posting.docId = Integer.valueOf(dataInPosting[0]);
-                            posting.numOfOccurrences = Integer.valueOf(dataInPosting[1]);
-                            term.postingList.add(posting);
+                            posting.frequency = Integer.valueOf(dataInPosting[1]);
+
+                            //insert the posting in order sorted by 'sortBy' value
+                            int i;
+                            if (sortBy == Dictionary.SortBy.docId) {
+                                for (i = 0; i < term.postingList.size(); i++) {
+                                    if (term.postingList.get(i).docId > posting.docId) {
+                                        term.postingList.add(i, posting);
+                                        break;
+                                    }
+                                }
+                                if (i == term.postingList.size()) {
+                                    term.postingList.add(i, posting);
+                                }
+                            } else if (sortBy == Dictionary.SortBy.frequency) {
+                                for (i = 0; i < term.postingList.size(); i++) {
+                                    if (term.postingList.get(i).frequency > posting.frequency) {
+                                        term.postingList.add(i, posting);
+                                        break;
+                                    }
+                                }
+                                if (i == term.postingList.size()) {
+                                    term.postingList.add(i, posting);
+                                }
+                            } else if (sortBy == Dictionary.SortBy.unsorted) {
+                                term.postingList.add(posting);
+                            }
                         } else {
                             System.out.println("Error: Term \"" + tokensInTerm[0] + "\" in the file has a posting in an " +
                                     "invalid format.\nPosting: " + postingString);
@@ -93,6 +120,9 @@ public class IndexBuilder {
                     return null;
                 }
 
+                //add the term to the dictionary
+                dictionary.terms.add(term);
+
 //                //Print term for testing
 //                System.out.println("Term: "+term.termString);
 //                System.out.println("Count: "+term.count);
@@ -100,18 +130,17 @@ public class IndexBuilder {
 //                for(Posting p : term.postingList)
 //                {
 //                    System.out.println("\tDocId: "+p.docId);
-//                    System.out.println("\tNumber of Occurrences: "+p.numOfOccurrences);
+//                    System.out.println("\tNumber of Occurrences: "+p.frequency);
 //                }
 //                System.out.println("PostingList: "+tokensInTerm[2]);
 
-                //add the term to the dictionary
-                dictionary.terms.add(term);
+                dictionary.termsCount = linenumber;
 
                 // to break the code after reading one line for testing
-                //break;
+//                if(linenumber == 47)
+//                    break;
             }
 
-            dictionary.termsCount = linenumber;
 
             // Always close files.
             bufferedReader.close();
