@@ -7,7 +7,12 @@ public class Main {
 
         IndexBuilder indexBuilder = new IndexBuilder();
         Dictionary dictionarySortedByDocId = indexBuilder.BuildIndex("term.idx", Dictionary.SortBy.docId);
-        Dictionary dictionarySortedByFreq = indexBuilder.BuildIndex("term.idx", Dictionary.SortBy.frequency);
-        dictionarySortedByFreq.printDictionary();
+        //Dictionary dictionarySortedByFreq = indexBuilder.BuildIndex("term.idx", Dictionary.SortBy.frequency);
+        //dictionarySortedByFreq.printDictionary();
+
+        //get a mini dictionary of the top k terms
+        Dictionary topKTerms = dictionarySortedByDocId.getTopK(10);
+        topKTerms.printDictionary();
+
     }
 }

@@ -4,6 +4,6 @@ import java.util.LinkedList;
 
 public class Term {
     String termString;
-    int count;
+    int postingCount;
     LinkedList<Posting> postingList;
 }

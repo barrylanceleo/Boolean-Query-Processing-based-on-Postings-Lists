@@ -47,15 +47,15 @@ public class IndexBuilder {
                 Term term = new Term();
                 term.termString = tokensInTerm[0];
 
-                //remove the 'c' from the count and update term.count
+                //remove the 'c' from the postingCount and update term.postingCount
                 StringBuilder count = new StringBuilder(tokensInTerm[1]);
                 if (count.charAt(0) == 'c') {
                     count.deleteCharAt(0);
                 } else {
-                    System.out.println("Error: Term \"" + tokensInTerm[0] + "\" in the file has count in an invalid format.");
+                    System.out.println("Error: Term \"" + tokensInTerm[0] + "\" in the file has postingCount in an invalid format.");
                     return null;
                 }
-                term.count = Integer.valueOf(count.toString());
+                term.postingCount = Integer.valueOf(count.toString());
 
                 //Update term.postingList
 
@@ -74,7 +74,7 @@ public class IndexBuilder {
 
                 String postings[] = postingList.toString().split(", ");
 
-                if (postings.length == term.count) {
+                if (postings.length == term.postingCount) {
                     for (String postingString : postings) {
                         String dataInPosting[] = postingString.split("/");
                         if (dataInPosting.length == 2) {
@@ -84,6 +84,7 @@ public class IndexBuilder {
 
                             //insert the posting in order sorted by 'sortBy' value
                             int i;
+                            //sort by increasing order of docid
                             if (sortBy == Dictionary.SortBy.docId) {
                                 for (i = 0; i < term.postingList.size(); i++) {
                                     if (term.postingList.get(i).docId > posting.docId) {
@@ -94,9 +95,10 @@ public class IndexBuilder {
                                 if (i == term.postingList.size()) {
                                     term.postingList.add(i, posting);
                                 }
-                            } else if (sortBy == Dictionary.SortBy.frequency) {
+                            } // sort by decreasing order of frequency
+                            else if (sortBy == Dictionary.SortBy.frequency) {
                                 for (i = 0; i < term.postingList.size(); i++) {
-                                    if (term.postingList.get(i).frequency > posting.frequency) {
+                                    if (term.postingList.get(i).frequency < posting.frequency) {
                                         term.postingList.add(i, posting);
                                         break;
                                     }
@@ -104,7 +106,8 @@ public class IndexBuilder {
                                 if (i == term.postingList.size()) {
                                     term.postingList.add(i, posting);
                                 }
-                            } else if (sortBy == Dictionary.SortBy.unsorted) {
+                            } //unsorted just insert
+                            else if (sortBy == Dictionary.SortBy.unsorted) {
                                 term.postingList.add(posting);
                             }
                         } else {
@@ -115,7 +118,7 @@ public class IndexBuilder {
                     }
                 } else {
                     System.out.println("Error: Term \"" + tokensInTerm[0] + "\" in the file has a mismatch in the number" +
-                            " of postings and the count provided.\nCount provided: " + term.count + "\nNumber of postings: "
+                            " of postings and the postingCount provided.\nCount provided: " + term.postingCount + "\nNumber of postings: "
                             + postings.length);
                     return null;
                 }
@@ -123,21 +126,10 @@ public class IndexBuilder {
                 //add the term to the dictionary
                 dictionary.terms.add(term);
 
-//                //Print term for testing
-//                System.out.println("Term: "+term.termString);
-//                System.out.println("Count: "+term.count);
-//                System.out.println("Posting List : ");
-//                for(Posting p : term.postingList)
-//                {
-//                    System.out.println("\tDocId: "+p.docId);
-//                    System.out.println("\tNumber of Occurrences: "+p.frequency);
-//                }
-//                System.out.println("PostingList: "+tokensInTerm[2]);
-
                 dictionary.termsCount = linenumber;
 
-                // to break the code after reading one line for testing
-//                if(linenumber == 47)
+                //for testing, i is the number of terms
+//                if(linenumber == 20)
 //                    break;
             }
 
