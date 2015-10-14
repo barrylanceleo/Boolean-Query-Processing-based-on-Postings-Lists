@@ -1,11 +1,11 @@
 package com.barrylanceleo;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 
 public class Dictionary {
     Dictionary.SortBy sortedBy;
     int termsCount;
-    LinkedList<Term> terms;
+    ArrayList<Term> terms;
 
     public enum SortBy {
         docId(1),
@@ -54,34 +54,61 @@ public class Dictionary {
         }
     }
 
+    void printTerms() {
+        for (int i = 0; i < terms.size() - 1; i++) {
+            System.out.print(i + 1 + ". " + terms.get(i).termString + ", ");
+        }
+        System.out.println(terms.size() + ". " + terms.get(terms.size() - 1).termString);
+    }
+
+    String getTermsString() {
+        StringBuilder termsString = new StringBuilder();
+        for (int i = 0; i < terms.size() - 1; i++) {
+            termsString.append(terms.get(i).termString);
+            termsString.append(" " + terms.get(i).postingCount);
+            termsString.append(" ,");
+        }
+        termsString.append(terms.get(terms.size() - 1).termString);
+        termsString.append(" " + terms.get(terms.size() - 1).postingCount);
+        return termsString.toString();
+    }
+
     Dictionary getTopK(int k) {
         //Construct a mini dictionary containing the topKterms
         Dictionary topKTerms = new Dictionary();
         topKTerms.sortedBy = SortBy.unsorted;
+
         //topKTerms.termsCount = 0;
-        topKTerms.terms = new LinkedList<>();
-        if (topKTerms.terms.size() == 0)
-            topKTerms.terms.add(terms.get(0));
-        for (int i = 1; i < terms.size(); i++) {
+        topKTerms.terms = new ArrayList<>();
+
+        long timeBefore = System.currentTimeMillis();
+        for (int i = 0; i < terms.size(); i++) {
             //ignore the element if topkterms is filled
             // and the posting count is smaller than all terms in topKterms
-            if (topKTerms.terms.size() >= k && topKTerms.terms.get(k - 1).postingCount >= terms.get(i).postingCount) {
+            if (topKTerms.terms.size() == k && topKTerms.terms.get(k - 1).postingCount >= terms.get(i).postingCount) {
                 //System.out.println("Ignoring term " + i);
-                break;
+                continue;
             }
-            for (int j = 0; j < topKTerms.terms.size(); j++) {
+            int j;
+            for (j = 0; j < topKTerms.terms.size(); j++) {
                 if (terms.get(i).postingCount > topKTerms.terms.get(j).postingCount) {
                     topKTerms.terms.add(j, terms.get(i));
                     if (topKTerms.terms.size() > k) {
-                        topKTerms.terms.remove(k - 1);
+                        topKTerms.terms.remove(k);
                     }
                     break;
                 }
             }
+            //if the term was not inserted and topKTerms has space insert it at the end
+            if (j == topKTerms.terms.size() && j < k)
+                topKTerms.terms.add(j, terms.get(i));
         }
         topKTerms.termsCount = topKTerms.terms.size();
+        long timeAfter = System.currentTimeMillis();
+        System.out.println("Time Taken: " + (timeAfter - timeBefore));
         return topKTerms;
     }
+
 
     Term getPostingList(String inputString) {
         for (Term term : terms) {

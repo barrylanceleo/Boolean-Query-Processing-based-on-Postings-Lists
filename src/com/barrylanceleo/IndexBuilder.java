@@ -4,7 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.LinkedList;
+import java.util.ArrayList;
 
 public class IndexBuilder {
 
@@ -26,7 +26,7 @@ public class IndexBuilder {
             //Initialize the Dictionary Object
             Dictionary dictionary = new Dictionary();
             dictionary.termsCount = 0;
-            dictionary.terms = new LinkedList<>();
+            dictionary.terms = new ArrayList<>();
             //the dictionary will be sorted by sortBy value
             dictionary.sortedBy = sortBy;
 
@@ -58,8 +58,7 @@ public class IndexBuilder {
                 term.postingCount = Integer.valueOf(count.toString());
 
                 //Update term.postingList
-
-                term.postingList = new LinkedList<>();
+                term.postingList = new ArrayList<>();
 
                 StringBuilder postingList = new StringBuilder(tokensInTerm[2]);
                 if (postingList.charAt(0) == 'm' && postingList.charAt(1) == '['
@@ -125,11 +124,10 @@ public class IndexBuilder {
 
                 //add the term to the dictionary
                 dictionary.terms.add(term);
-
                 dictionary.termsCount = linenumber;
 
-                //for testing, i is the number of terms
-//                if(linenumber == 20)
+//                //for testing, i is the number of terms
+//                if(linenumber == 50)
 //                    break;
             }
 
