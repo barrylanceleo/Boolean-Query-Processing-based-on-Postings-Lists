@@ -1,9 +1,7 @@
 package com.barrylanceleo;
 
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -13,58 +11,44 @@ public class Main {
 
     static Dictionary dictionarySortedByDocId;
     static Dictionary dictionarySortedByFreq;
-    static LogWriter logWriter = new LogWriter();
+    static LogWriter logWriter;
 
-    static int getTopKTerms(String commands[]) {
-        if (commands.length <= 1) {
-            System.out.println("Unsupported command. Enter \"help\" for help.");
-            return -1;
-        }
-        //get the value for K
-        int k;
-        try {
-            k = Integer.parseInt(commands[1]);
-        } catch (NumberFormatException nfe) {
-            System.out.println("Unsupported command. Enter \"help\" for help.");
-            return -1;
-        }
+    static int getTopKTerms(int k) {
 
         //get a mini dictionary of the top k terms
         Dictionary topKTerms = dictionarySortedByDocId.getTopK(k);
-        topKTerms.printTerms();
+        //topKTerms.printTerms();
 
         //Build the log output
         String output = "FUNCTION: ";
-        output += commands[0] + " " + commands[1] + "\n";
+        output += "getTopK" + " " + k + "\n";
         output += "Result: ";
         output += topKTerms.getTermsString();
         output += "\n";
+
         //write output to logfile
         logWriter.writeLog(output);
 
-        System.out.println(output);
+        //print the output
+        System.out.print(output);
         return 0;
     }
 
     static int getPostings(String commands[]) {
-        if (commands.length <= 1) {
-            System.out.println("Unsupported command. Enter \"help\" for help.");
-            return -1;
-        }
 
         //iterate through the given terms starting with 1 as the first command will be getPostings
-        for (int i = 1; i < commands.length; i++) {
+        for (int i = 0; i < commands.length; i++) {
             //getPosting for the current term
             Term termWithPostingsSortedByDocId = dictionarySortedByDocId.getPostingList(commands[i]);
             Term termWithPostingsSortedByFreq = dictionarySortedByFreq.getPostingList(commands[i]);
 
             //build the output
-            String output = "FUNCTION: " + commands[0] + " " + commands[i] + "\n";
+            String output = "FUNCTION: " + "getPostings" + " " + commands[i] + "\n";
             if (termWithPostingsSortedByDocId == null) {
                 output += "term not found\n";
             } else {
-                output += "Ordered by doc IDs:" + termWithPostingsSortedByDocId.getDocIDString() + "\n";
-                output += "Ordered by TF:" + termWithPostingsSortedByFreq.getDocIDString() + "\n";
+                output += "Ordered by doc IDs: " + termWithPostingsSortedByDocId.getDocIDString() + "\n";
+                output += "Ordered by TF: " + termWithPostingsSortedByFreq.getDocIDString() + "\n";
             }
 
             //write output to logfile
@@ -76,31 +60,27 @@ public class Main {
         return 0;
     }
 
-    static int termAtATimeQueryAnd(String commands[]) {
-        if (commands.length <= 1) {
-            System.out.println("Unsupported command. Enter \"help\" for help.");
-            return -1;
-        }
+    static int termAtATimeQueryAnd(String query[]) {
 
         //note the time
         long timeBefore = System.currentTimeMillis();
 
         //Build Output
-        String output = "FUNCTION: ";
-        for (int i = 0; i < commands.length - 1; i++) {
-            output += commands[i] + " ";
+        String output = "FUNCTION: termAtATimeQueryAnd ";
+        for (int i = 0; i < query.length - 1; i++) {
+            output += query[i] + " ";
         }
-        output += commands[commands.length - 1] + "\n";
+        output += query[query.length - 1] + "\n";
 
         //get the postingsList for the terms
-        int numberOfTerms = commands.length - 1;
+        int numberOfTerms = query.length;
         Term searchTerms[] = new Term[numberOfTerms];
         for (int i = 0; i < numberOfTerms; i++) {
-            searchTerms[i] = dictionarySortedByFreq.getPostingList(commands[i + 1]);
+            searchTerms[i] = dictionarySortedByFreq.getPostingList(query[i]);
             if (searchTerms[i] == null) {
                 output += "terms not found\n";
                 logWriter.writeLog(output);
-                System.out.println(output);
+                System.out.print(output);
                 return 0;
             }
         }
@@ -113,6 +93,7 @@ public class Main {
         }
 
         int comparisonsCount = 0;
+        //term at a time
         //compare with the next term and remove the documents which are not present in both
         //iterate over all search terms
         for (int i = 1; i < numberOfTerms; i++) {
@@ -123,7 +104,6 @@ public class Main {
                 for (k = 0; k < searchTerms[i].postingList.size(); k++) {
                     comparisonsCount++;
                     if (foundDocuments.get(j).docId == searchTerms[i].postingList.get(k).docId) {
-                        comparisonsCount++;
                         break;
                     }
                 }
@@ -154,25 +134,9 @@ public class Main {
         output += comparisonsCount + " comparisons are made\n";
 
         //add the time taken to the output
-        output += ((timeAfter - timeBefore) / 1000) + "." + ((timeAfter - timeBefore) % 1000) + "seconds are used\n";
-
-
-//        //add the foundDocuments to the output
-//        output += "Result: ";
-//        if (foundDocuments.size() == 0) {
-//            output += "no matching doc ids\n";
-//            logWriter.writeLog(output);
-//            System.out.print(output);
-//            return 0;
-//        }
-//        for (int i = 0; i < foundDocuments.size() - 1; i++) {
-//            output += foundDocuments.get(i).docId + " " + foundDocuments.get(i).frequency + ", ";
-//        }
-//        output = output + foundDocuments.get(foundDocuments.size() - 1).docId + " "
-//                + foundDocuments.get(foundDocuments.size() - 1).frequency + "\n";
-
+        //output += ((timeAfter - timeBefore) / 1000) + "." + ((timeAfter - timeBefore) % 1000) + " seconds are used\n";
+        output += (timeAfter - timeBefore) / 1000.0 + " seconds are used\n";
         //optimization part
-
         //sort the terms in ascending order by postingCount
         Arrays.sort(searchTerms, new Comparator<Term>() {
             @Override
@@ -200,7 +164,6 @@ public class Main {
                 for (k = 0; k < searchTerms[i].postingList.size(); k++) {
                     comparisonsCount++;
                     if (foundDocuments.get(j).docId == searchTerms[i].postingList.get(k).docId) {
-                        comparisonsCount++;
                         break;
                     }
                 }
@@ -244,33 +207,29 @@ public class Main {
         //write output to logfile
         logWriter.writeLog(output);
 
-        System.out.println(output);
+        System.out.print(output);
 
         return 0;
     }
 
     static int termAtATimeQueryOr(String commands[]) {
-        if (commands.length <= 1) {
-            System.out.println("Unsupported command. Enter \"help\" for help.");
-            return -1;
-        }
 
         //note the time
         long timeBefore = System.currentTimeMillis();
 
         //Build Output
-        String output = "FUNCTION: ";
+        String output = "FUNCTION: termAtATimeQueryOr ";
         for (int i = 0; i < commands.length - 1; i++) {
             output += commands[i] + " ";
         }
         output += commands[commands.length - 1] + "\n";
 
         //get the postingsList for the terms
-        int numberOfTerms = commands.length - 1;
+        int numberOfTerms = commands.length;
         ArrayList<Term> searchTermsFoundInDictionary = new ArrayList<>();
 
         for (int i = 0; i < numberOfTerms; i++) {
-            Term foundTerm = dictionarySortedByFreq.getPostingList(commands[i + 1]);
+            Term foundTerm = dictionarySortedByFreq.getPostingList(commands[i]);
             if (foundTerm != null) {
                 searchTermsFoundInDictionary.add(foundTerm);
             }
@@ -278,7 +237,7 @@ public class Main {
         if (searchTermsFoundInDictionary.size() == 0) {
             output += "terms not found\n";
             logWriter.writeLog(output);
-            System.out.println(output);
+            System.out.print(output);
             return 0;
         }
 
@@ -332,25 +291,10 @@ public class Main {
         output += comparisonsCount + " comparisons are made\n";
 
         //add the time taken to the output
-        output += ((timeAfter - timeBefore) / 1000) + "." + ((timeAfter - timeBefore) % 1000) + "seconds are used\n";
-
-//        //add the foundDocuments to the output
-//        output += "Result: ";
-//        if (foundDocuments.size() == 0) {
-//            output += "no matching doc ids\n";
-//            logWriter.writeLog(output);
-//            System.out.print(output);
-//            return 0;
-//        }
-//        for (int i = 0; i < foundDocuments.size() - 1; i++) {
-//            output += foundDocuments.get(i).docId + " " + foundDocuments.get(i).frequency + ", ";
-//        }
-//        output = output + foundDocuments.get(foundDocuments.size() - 1).docId + " "
-//                + foundDocuments.get(foundDocuments.size() - 1).frequency + "\n";
-
+        //output += ((timeAfter - timeBefore) / 1000) + "." + ((timeAfter - timeBefore) % 1000) + " seconds are used\n";
+        output += (timeAfter - timeBefore) / 1000.0 + " seconds are used\n";
 
         //optimization part
-
         //sort the terms in descending order by postingCount
         Collections.sort(searchTermsFoundInDictionary, new Comparator<Term>() {
             @Override
@@ -412,45 +356,40 @@ public class Main {
             return 0;
         }
         for (int i = 0; i < foundDocuments.size() - 1; i++) {
-            output += foundDocuments.get(i).docId + " " + foundDocuments.get(i).frequency + ", ";
+            output += foundDocuments.get(i).docId +/* " " + foundDocuments.get(i).frequency + */", ";
         }
-        output = output + foundDocuments.get(foundDocuments.size() - 1).docId + " "
-                + foundDocuments.get(foundDocuments.size() - 1).frequency + "\n";
+        output = output + foundDocuments.get(foundDocuments.size() - 1).docId + "\n";
 
 
         //write output to logfile
         logWriter.writeLog(output);
 
-        System.out.println(output);
+        System.out.print(output);
 
         return 0;
     }
 
     static int docAtATimeQueryAnd(String commands[]) {
-        if (commands.length <= 1) {
-            System.out.println("Unsupported command. Enter \"help\" for help.");
-            return -1;
-        }
 
         //note the time
         long timeBefore = System.currentTimeMillis();
 
         //Build Output
-        String output = "FUNCTION: ";
+        String output = "FUNCTION: docAtATimeQueryAnd ";
         for (int i = 0; i < commands.length - 1; i++) {
             output += commands[i] + " ";
         }
         output += commands[commands.length - 1] + "\n";
 
         //get the postingsList for the terms
-        int numberOfTerms = commands.length - 1;
+        int numberOfTerms = commands.length;
         Term searchTerms[] = new Term[numberOfTerms];
         for (int i = 0; i < numberOfTerms; i++) {
-            searchTerms[i] = dictionarySortedByDocId.getPostingList(commands[i + 1]);
+            searchTerms[i] = dictionarySortedByDocId.getPostingList(commands[i]);
             if (searchTerms[i] == null) {
                 output += "terms not found\n";
                 logWriter.writeLog(output);
-                System.out.println(output);
+                System.out.print(output);
                 return 0;
             }
         }
@@ -469,16 +408,16 @@ public class Main {
         findDocs:
         for (int i = 0; i < searchTerms[0].postingList.size(); i++) {
             int searchedDocId = searchTerms[0].postingList.get(i).docId;
-            //iterate through all the searchTerms
+            //iterate through all the searchTerms it becomes document at a time here.
             int j;
             for (j = 1; j < numberOfTerms; j++) {
                 comparisonsCount++;
+
                 //while searchedDocId is lesser than the docIds of the current term so go past them
                 while (searchedDocId > searchTerms[j].postingList.get(docPointers[j]).docId) {
                     comparisonsCount++;
 
                     docPointers[j]++;
-
                     if (docPointers[j] == searchTerms[j].postingList.size()) {
                         //reached the end of a term, so there can't be an AND match anymore
                         break findDocs;
@@ -486,7 +425,6 @@ public class Main {
                 }
                 //if current Term contains the DocId go to the next term
                 if (searchedDocId == searchTerms[j].postingList.get(docPointers[j]).docId) {
-
                     docPointers[j]++;
                     continue;
                 }//if docId is not present in the current term, go to the next docId
@@ -516,9 +454,8 @@ public class Main {
         output += comparisonsCount + " comparisons are made\n";
 
         //add the time taken to the output
-        output += ((timeAfter - timeBefore) / 1000) + "." + ((timeAfter - timeBefore) % 1000) + "seconds are used\n";
-
-        //need to perform the optimization here
+        //output += ((timeAfter - timeBefore) / 1000) + "." + ((timeAfter - timeBefore) % 1000) + " seconds are used\n";
+        output += (timeAfter - timeBefore) / 1000.0 + " seconds are used\n";
 
         //add the foundDocuments to the output
         output += "Result: ";
@@ -536,33 +473,29 @@ public class Main {
         //write output to logfile
         logWriter.writeLog(output);
 
-        System.out.println(output);
+        System.out.print(output);
 
         return 0;
     }
 
     static int docAtATimeQueryOr(String commands[]) {
-        if (commands.length <= 1) {
-            System.out.println("Unsupported command. Enter \"help\" for help.");
-            return -1;
-        }
 
         //note the time
         long timeBefore = System.currentTimeMillis();
 
         //Build Output
-        String output = "FUNCTION: ";
+        String output = "FUNCTION: docAtATimeQueryOr ";
         for (int i = 0; i < commands.length - 1; i++) {
             output += commands[i] + " ";
         }
         output += commands[commands.length - 1] + "\n";
 
         //get the postingsList for the terms
-        int numberOfTerms = commands.length - 1;
+        int numberOfTerms = commands.length;
         ArrayList<Term> searchTermsFoundInDictionary = new ArrayList<>();
 
         for (int i = 0; i < numberOfTerms; i++) {
-            Term foundTerm = dictionarySortedByDocId.getPostingList(commands[i + 1]);
+            Term foundTerm = dictionarySortedByDocId.getPostingList(commands[i]);
             if (foundTerm != null) {
                 searchTermsFoundInDictionary.add(foundTerm);
             }
@@ -570,7 +503,7 @@ public class Main {
         if (searchTermsFoundInDictionary.size() == 0) {
             output += "terms not found\n";
             logWriter.writeLog(output);
-            System.out.println(output);
+            System.out.print(output);
             return 0;
         }
 
@@ -630,16 +563,15 @@ public class Main {
         //note the time
         long timeAfter = System.currentTimeMillis();
 
-        //add the documents count to the output
+        //add the documents count to the outputa
         output += foundDocuments.size() + " documents are found\n";
 
         //add the comparisons count to the output
         output += comparisonsCount + " comparisons are made\n";
 
         //add the time taken to the output
-        output += ((timeAfter - timeBefore) / 1000) + "." + ((timeAfter - timeBefore) % 1000) + "seconds are used\n";
-
-        //need to perform the optimization here
+        //output += ((timeAfter - timeBefore) / 1000) + "." + ((timeAfter - timeBefore) % 1000) + " seconds are used\n";
+        output += (timeAfter - timeBefore) / 1000.0 + " seconds are used\n";
 
         //add the foundDocuments to the output
         output += "Result: ";
@@ -657,26 +589,21 @@ public class Main {
         //write output to logfile
         logWriter.writeLog(output);
 
-        System.out.println(output);
+        System.out.print(output);
 
         return 0;
     }
 
+    static String[] getQueryFromCommand(String[] commands) {
+        String queryList[] = new String[commands.length - 1];
+        for (int i = 0; i < queryList.length; i++) {
+            queryList[i] = commands[i + 1];
+        }
 
-    public static void main(String[] args) {
+        return queryList;
+    }
 
-        //Build the dictionaries
-        System.out.print("Building the dictionaries...");
-        IndexBuilder indexBuilder = new IndexBuilder();
-        long timeBefore = System.currentTimeMillis();
-        dictionarySortedByDocId = indexBuilder.BuildIndex("term.idx", Dictionary.SortBy.docId);
-        dictionarySortedByFreq = indexBuilder.BuildIndex("term.idx", Dictionary.SortBy.frequency);
-        long timeAfter = System.currentTimeMillis();
-
-        //dictionarySortedByFreq.printDictionary();
-        System.out.println("\nDone building the dictionaries. in " + (timeAfter - timeBefore) / 1000
-                + "." + (timeAfter - timeBefore) % 1000 + "seconds.");
-
+    static void terminalEmulator() {
         //read and handle the input
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -691,51 +618,223 @@ public class Main {
                     continue;
                 switch (commands[0]) {
                     case "help":
-                        System.out.println("getTopK K: This returns the key dictionary terms that have " +
-                                "the K largest postings lists.");
+                        System.out.println("Usage: query <terms>. Or you can use any of the following function,\n" +
+                                "getTopK, getPostings, termAtATimeQueryAnd, termAtATimeQueryOr, docAtATimeQueryAnd" +
+                                "docAtATimeQueryAnd.\n");
+
+                        break;
+
+                    case "query":
+                        if (commands.length <= 1) {
+                            System.out.println("Usage: query <terms>");
+                            break;
+                        }
+
+                        String[] queryList = getQueryFromCommand(commands);
+
+                        //call all the procedures
+                        //call getPostings
+                        getPostings(queryList);
+
+                        //call termAtATimeQueryAnd
+                        termAtATimeQueryAnd(queryList);
+
+                        //call termAtATimeQueryOr
+                        termAtATimeQueryOr(queryList);
+
+                        //call docAtATimeQueryAnd
+                        docAtATimeQueryAnd(queryList);
+
+                        //call docAtATimeQueryOr
+                        docAtATimeQueryOr(queryList);
+
                         break;
 
                     case "getTopK":
-                        getTopKTerms(commands);
+                        if (commands.length <= 1) {
+                            System.out.println("Usage: getTopK <K_value>");
+                            break;
+                        }
+                        //get the value for K
+                        int k;
+                        try {
+                            k = Integer.parseInt(commands[1]);
+                        } catch (NumberFormatException nfe) {
+                            System.out.println("Usage: getTopK <K_value>");
+                            break;
+                        }
+                        getTopKTerms(k);
                         break;
 
                     case "getPostings":
-                        getPostings(commands);
+                        if (commands.length <= 1) {
+                            System.out.println("Usage: getPostings <terms>");
+                            break;
+                        }
+                        getPostings(getQueryFromCommand(commands));
                         break;
 
                     case "termAtATimeQueryAnd":
-                        termAtATimeQueryAnd(commands);
+                        if (commands.length <= 1) {
+                            System.out.println("Usage: termAtATimeQueryAnd <terms>");
+                            break;
+                        }
+                        termAtATimeQueryAnd(getQueryFromCommand(commands));
                         break;
 
                     case "termAtATimeQueryOr":
-                        termAtATimeQueryOr(commands);
+                        if (commands.length <= 1) {
+                            System.out.println("Usage: termAtATimeQueryOr <terms>");
+                            break;
+                        }
+                        termAtATimeQueryOr(getQueryFromCommand(commands));
                         break;
 
                     case "docAtATimeQueryAnd":
-                        docAtATimeQueryAnd(commands);
+                        if (commands.length <= 1) {
+                            System.out.println("Usage: docAtATimeQueryAnd <terms>");
+                            break;
+                        }
+                        docAtATimeQueryAnd(getQueryFromCommand(commands));
                         break;
 
                     case "docAtATimeQueryOr":
-                        docAtATimeQueryOr(commands);
+                        if (commands.length <= 1) {
+                            System.out.println("Usage: termAtATimeQueryAnd <terms>");
+                            break;
+                        }
+                        System.out.println("Usage: docAtATimeQueryOr <terms>");
                         break;
 
                     case "exit":
+                    case "quit":
+                    case "q":
                         System.exit(0);
 
                     default:
                         System.out.println("Unsupported command. Enter \"help\" for help.");
 
                 }
-//                for(String command : commands)
-//                {
-//                    System.out.println("--"+command+"--");
-//                }
+
             }
 
         } catch (IOException io) {
             System.out.println("Bye!");
         }
+    }
 
+    static int buildDictionaries(String indexLocation) {
+        if (indexLocation == null) {
+            System.out.println("Failed to build index. No index location provided.");
+            return -1;
+        }
+
+        //Build the dictionaries
+        System.out.println("Building the dictionaries from index " + indexLocation + "...");
+        IndexBuilder indexBuilder = new IndexBuilder();
+        long timeBefore = System.currentTimeMillis();
+        dictionarySortedByDocId = indexBuilder.BuildIndex(indexLocation, Dictionary.SortBy.docId);
+        dictionarySortedByFreq = indexBuilder.BuildIndex(indexLocation, Dictionary.SortBy.frequency);
+        if (dictionarySortedByDocId == null || dictionarySortedByFreq == null) {
+            System.out.println("Failed to build index.");
+            return -1;
+        }
+        long timeAfter = System.currentTimeMillis();
+        System.out.println("\nDone building the dictionaries. in " + (timeAfter - timeBefore) / 1000
+                + "." + (timeAfter - timeBefore) % 1000 + "seconds.");
+
+        return 0;
+    }
+
+    public static void main(String[] args) throws IOException {
+
+        String indexLocation = "term.idx";
+        String logFileLocation = "output.log";
+        int topKtermsCount;
+        String queryLocation;
+
+        //start terminal
+        if (args.length != 4) {
+            System.out.println("Not enough command-line arguments, starting terminal mode.");
+            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+            //build the index
+            do {
+                System.out.println("Enter the path to the index file.");
+                indexLocation = br.readLine();
+            }
+            while (buildDictionaries(indexLocation) != 0);
+
+            //initialize the logWriter
+            logWriter = new LogWriter();
+
+            //start the terminal
+            terminalEmulator();
+        }//process the command line
+        else {
+
+            indexLocation = args[0];
+            logFileLocation = args[1];
+            topKtermsCount = Integer.parseInt(args[2]);
+            queryLocation = args[3];
+
+            //build the index
+            buildDictionaries(indexLocation);
+
+            //initialize the logWriter
+            logWriter = new LogWriter(logFileLocation);
+
+            //read the query file and process it
+            try {
+                // FileReader reads text files in the default encoding.
+                FileReader fileReader =
+                        new FileReader(queryLocation);
+
+                // Always wrap FileReader in BufferedReader.
+                BufferedReader queryBReader =
+                        new BufferedReader(fileReader);
+
+                //process each query line
+                String query;
+                while ((query = queryBReader.readLine()) != null) {
+                    String queryList[] = query.split(" ");
+
+                    //call getTopK
+                    getTopKTerms(topKtermsCount);
+
+                    //call getPostings
+                    getPostings(queryList);
+
+                    //call termAtATimeQueryAnd
+                    termAtATimeQueryAnd(queryList);
+
+                    //call termAtATimeQueryOr
+                    termAtATimeQueryOr(queryList);
+
+                    //call docAtATimeQueryAnd
+                    docAtATimeQueryAnd(queryList);
+
+                    //call docAtATimeQueryOr
+                    docAtATimeQueryOr(queryList);
+
+                    //System.out.println("Bye!");
+
+                }
+
+            } catch (FileNotFoundException ex) {
+                System.out.println(
+                        "Unable to open query file '" +
+                                queryLocation + "'");
+            } catch (IOException ex) {
+                System.out.println(
+                        "Error reading query file '"
+                                + queryLocation + "'");
+                // Or we could just do this:
+                // ex.printStackTrace();
+            } catch (Exception ex) {
+                System.out.println("Exception while reading line from query file.");
+            }
+        }
 
     }
 }

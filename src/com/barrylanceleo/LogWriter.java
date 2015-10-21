@@ -8,17 +8,15 @@ import java.io.PrintWriter;
  * Created by BarryLance on 10/13/2015.
  */
 public class LogWriter {
-    String logFileName;
-    String logFilePath;
+    String logFileLocation;
 
     LogWriter() {
-        logFileName = "log.txt";
-        logFilePath = "D:\\Dropbox\\Projects\\Boolean Query Processing\\files\\";
+        logFileLocation = "output.log";
+        //logFileLocation = "D:\\Dropbox\\Projects\\Boolean Query Processing\\files\\output.log";
 
         //delete and create a new file if the log file is already existing
-        String filename = logFilePath + logFileName;
         try {
-            PrintWriter pw = new PrintWriter(new FileWriter(filename, false));
+            PrintWriter pw = new PrintWriter(new FileWriter(logFileLocation, false));
             pw.close();
         } catch (IOException ioe) {
             System.out.println("Error initializing log file.\n");
@@ -27,14 +25,12 @@ public class LogWriter {
 
     }
 
-    LogWriter(String fileName, String path) {
-        logFileName = fileName;
-        logFilePath = path;
+    LogWriter(String fileLocation) {
+        logFileLocation = fileLocation;
 
         //delete and create a new file if the log file is already existing
-        String filename = logFilePath + logFileName;
         try {
-            PrintWriter pw = new PrintWriter(new FileWriter(filename, false));
+            PrintWriter pw = new PrintWriter(new FileWriter(logFileLocation, false));
             pw.close();
         } catch (IOException ioe) {
             System.out.println("Error initializing log file.\n");
@@ -43,9 +39,8 @@ public class LogWriter {
     }
 
     int writeLog(String logText) {
-        String filename = logFilePath + logFileName;
         try {
-            PrintWriter pw = new PrintWriter(new FileWriter(filename, true));
+            PrintWriter pw = new PrintWriter(new FileWriter(logFileLocation, true));
             pw.print(logText);
             pw.close();
         } catch (Exception e) {

@@ -65,11 +65,11 @@ public class Dictionary {
         StringBuilder termsString = new StringBuilder();
         for (int i = 0; i < terms.size() - 1; i++) {
             termsString.append(terms.get(i).termString);
-            termsString.append(" " + terms.get(i).postingCount);
-            termsString.append(" ,");
+            //termsString.append(" " + terms.get(i).postingCount);
+            termsString.append(", ");
         }
         termsString.append(terms.get(terms.size() - 1).termString);
-        termsString.append(" " + terms.get(terms.size() - 1).postingCount);
+        //termsString.append(" " + terms.get(terms.size() - 1).postingCount);
         return termsString.toString();
     }
 
@@ -105,7 +105,7 @@ public class Dictionary {
         }
         topKTerms.termsCount = topKTerms.terms.size();
         long timeAfter = System.currentTimeMillis();
-        System.out.println("Time Taken: " + (timeAfter - timeBefore));
+        //System.out.println("Time Taken: " + (timeAfter - timeBefore));
         return topKTerms;
     }
 

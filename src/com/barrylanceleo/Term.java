@@ -22,10 +22,10 @@ public class Term {
     String getDocIDString() {
         String output = new String();
         for (int i = 0; i < postingList.size() - 1; i++) {
-            output = output + postingList.get(i).docId + " " + postingList.get(i).frequency + ", ";
+            output = output + postingList.get(i).docId + /*" " + postingList.get(i).frequency +/*/ ", ";
         }
-        output = output + postingList.get(postingList.size() - 1).docId + " "
-                + postingList.get(postingList.size() - 1).frequency;
+        output = output + postingList.get(postingList.size() - 1).docId;
+        //+ " " + postingList.get(postingList.size() - 1).frequency/*;
 
         return output;
     }
